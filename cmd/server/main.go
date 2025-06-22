@@ -11,10 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/octop162/normal-form-app-by-claude/internal/handler"
 	"github.com/octop162/normal-form-app-by-claude/internal/middleware"
-	"github.com/octop162/normal-form-app-by-claude/pkg/config"
-	"github.com/octop162/normal-form-app-by-claude/pkg/database"
 	"github.com/octop162/normal-form-app-by-claude/pkg/logger"
 )
 
@@ -26,17 +23,22 @@ const (
 )
 
 func main() {
-	// Load configuration
-	cfg, err := config.LoadConfig()
+	// Initialize application with dependency injection
+	app, cleanup, err := wireApp()
 	if err != nil {
-		panic("Failed to load configuration: " + err.Error())
+		panic("Failed to initialize application: " + err.Error())
 	}
+	defer func() {
+		if cleanup != nil {
+			cleanup()
+		}
+	}()
 
-	// Initialize logger
-	log := logger.NewLogger(cfg.Log.Level)
-	logger.InitDefaultLogger(cfg.Log.Level)
+	log := app.Logger
+	cfg := app.Config
 
 	log.Infof("Starting normal-form-app server in %s mode", cfg.Server.Mode)
+	logger.InitDefaultLogger(cfg.Log.Level)
 
 	// Set Gin mode
 	if cfg.IsProduction() {
@@ -45,27 +47,8 @@ func main() {
 		gin.SetMode(gin.DebugMode)
 	}
 
-	// Initialize database connection
-	var db *database.DB
-	if cfg.Database.Host != "" {
-		db, err = database.NewDB(&cfg.Database, log)
-		if err != nil {
-			log.WithError(err).Error("Failed to connect to database")
-			// Don't exit, allow server to run without database for health checks
-		} else {
-			defer func() {
-				if closeErr := db.Close(); closeErr != nil {
-					log.WithError(closeErr).Error("Failed to close database connection")
-				}
-			}()
-		}
-	}
-
-	// Create handlers
-	healthHandler := handler.NewHealthHandler(db, log)
-
 	// Create router
-	r := setupRouter(log, healthHandler)
+	r := setupRouter(app)
 
 	// Create HTTP server with timeouts
 	srv := &http.Server{
@@ -102,12 +85,12 @@ func main() {
 }
 
 // setupRouter configures and returns the Gin router
-func setupRouter(log *logger.Logger, healthHandler *handler.HealthHandler) *gin.Engine {
+func setupRouter(app *Application) *gin.Engine {
 	r := gin.New()
 
 	// Add middleware
-	r.Use(middleware.SimpleLoggerMiddleware(log))
-	r.Use(middleware.ErrorHandlerMiddleware(log))
+	r.Use(middleware.SimpleLoggerMiddleware(app.Logger))
+	r.Use(middleware.ErrorHandlerMiddleware(app.Logger))
 	r.Use(middleware.CORSMiddleware())
 
 	// Set up 404 and 405 handlers
@@ -117,9 +100,9 @@ func setupRouter(log *logger.Logger, healthHandler *handler.HealthHandler) *gin.
 	// Health check endpoints
 	health := r.Group("/health")
 	{
-		health.GET("", healthHandler.Health)
-		health.GET("/live", healthHandler.LivenessProbe)
-		health.GET("/ready", healthHandler.ReadinessProbe)
+		health.GET("", app.HealthHandler.Health)
+		health.GET("/live", app.HealthHandler.LivenessProbe)
+		health.GET("/ready", app.HealthHandler.ReadinessProbe)
 	}
 
 	// API v1 routes
@@ -132,6 +115,51 @@ func setupRouter(log *logger.Logger, healthHandler *handler.HealthHandler) *gin.
 				"version": "1.0.0",
 			})
 		})
+
+		// User endpoints
+		users := api.Group("/users")
+		{
+			users.POST("", app.UserHandler.CreateUser)
+			users.POST("/validate", app.UserHandler.ValidateUser)
+			users.GET("/:id", app.UserHandler.GetUser)
+			users.PUT("/:id", app.UserHandler.UpdateUser)
+			users.DELETE("/:id", app.UserHandler.DeleteUser)
+		}
+
+		// Session endpoints
+		sessions := api.Group("/sessions")
+		{
+			sessions.POST("", app.SessionHandler.CreateSession)
+			sessions.GET("/:id", app.SessionHandler.GetSession)
+			sessions.PUT("/:id", app.SessionHandler.UpdateSession)
+			sessions.DELETE("/:id", app.SessionHandler.DeleteSession)
+		}
+
+		// Option endpoints
+		options := api.Group("/options")
+		{
+			options.GET("", app.OptionHandler.GetOptions)
+			options.POST("/check-inventory", app.OptionHandler.CheckInventory)
+			options.GET("/:type", app.OptionHandler.GetOption)
+		}
+
+		// Address endpoints
+		api.GET("/address/search", app.AddressHandler.SearchAddress)
+		api.POST("/region/check", app.AddressHandler.CheckRegion)
+
+		// Prefecture endpoints
+		prefectures := api.Group("/prefectures")
+		{
+			prefectures.GET("", app.AddressHandler.GetPrefectures)
+			prefectures.GET("/:name", app.AddressHandler.GetPrefecture)
+		}
+
+		// Plan endpoints
+		plans := api.Group("/plans")
+		{
+			plans.GET("", app.PlanHandler.GetPlans)
+			plans.GET("/:type", app.PlanHandler.GetPlan)
+		}
 	}
 
 	return r

@@ -141,3 +141,18 @@ func (u *User) CanUseOption(option *OptionMaster) bool {
 		return false
 	}
 }
+
+// Address represents address information for external APIs
+type Address struct {
+	PostalCode string `json:"postal_code"`
+	Prefecture string `json:"prefecture"`
+	City       string `json:"city"`
+	Town       string `json:"town,omitempty"`
+}
+
+// Plan represents plan information
+type Plan struct {
+	PlanType    string `json:"plan_type"`
+	PlanName    string `json:"plan_name"`
+	Description string `json:"description,omitempty"`
+}
