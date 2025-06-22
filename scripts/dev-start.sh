@@ -175,12 +175,21 @@ start_mock_server() {
     # Kill existing mock server processes
     pkill -f "go run cmd/mock-server/main.go" 2>/dev/null || true
     pkill -f "cmd/mock-server/main.go" 2>/dev/null || true
+    pkill -f "build/mock-server" 2>/dev/null || true
 
     # Wait a moment for processes to terminate
     sleep 2
 
-    # Start mock server in background
-    nohup go run cmd/mock-server/main.go > logs/mock-server.log 2>&1 &
+    # Create build directory and build mock server
+    create_build_directory
+    print_status "Building Mock API server..."
+    go build -o build/mock-server ./cmd/mock-server
+    if [ $? -ne 0 ]; then
+        print_error "Failed to build Mock API server"
+        return 1
+    fi
+    
+    nohup ./build/mock-server > logs/mock-server.log 2>&1 &
     MOCK_PID=$!
     echo $MOCK_PID > logs/mock-server.pid
 
@@ -199,17 +208,33 @@ start_backend() {
     # Kill existing Go processes
     pkill -f "go run cmd/server/main.go" 2>/dev/null || true
     pkill -f "cmd/server/main.go" 2>/dev/null || true
+    pkill -f "build/server" 2>/dev/null || true
 
     # Wait a moment for processes to terminate
     sleep 2
 
-    # Set environment variables for external APIs
+    # Set environment variables for database and external APIs
+    export DB_HOST="localhost"
+    export DB_PORT="5432"
+    export DB_NAME="normal_form_db"
+    export DB_USER="postgres"
+    export DB_PASSWORD="postgres"
+    export LOG_LEVEL="debug"
+    export GO_ENV="development"
     export INVENTORY_API_URL="http://localhost:8081"
     export REGION_API_URL="http://localhost:8081"
     export ADDRESS_API_URL="http://localhost:8081"
 
-    # Start Go server in background
-    nohup go run cmd/server/main.go > logs/backend.log 2>&1 &
+    # Create build directory and build Go server
+    create_build_directory
+    print_status "Building Go backend..."
+    go build -o build/server ./cmd/server
+    if [ $? -ne 0 ]; then
+        print_error "Failed to build Go backend"
+        return 1
+    fi
+    
+    nohup ./build/server > logs/backend.log 2>&1 &
     GO_PID=$!
     echo $GO_PID > logs/backend.pid
 
@@ -268,6 +293,10 @@ start_docker_environment() {
 
 create_logs_directory() {
     mkdir -p logs
+}
+
+create_build_directory() {
+    mkdir -p build
 }
 
 show_status() {

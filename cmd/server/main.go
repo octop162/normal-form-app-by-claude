@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,7 +12,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/octop162/normal-form-app-by-claude/internal/handler"
 	"github.com/octop162/normal-form-app-by-claude/internal/middleware"
+	"github.com/octop162/normal-form-app-by-claude/pkg/config"
 	"github.com/octop162/normal-form-app-by-claude/pkg/logger"
 )
 
@@ -21,6 +24,19 @@ const (
 	idleTimeoutSeconds     = 60
 	shutdownTimeoutSeconds = 30
 )
+
+// Application holds all application components
+type Application struct {
+	UserHandler    *handler.UserHandler
+	SessionHandler *handler.SessionHandler
+	OptionHandler  *handler.OptionHandler
+	AddressHandler *handler.AddressHandler
+	PlanHandler    *handler.PlanHandler
+	HealthHandler  *handler.HealthHandler
+	DB             *sql.DB
+	Logger         *logger.Logger
+	Config         *config.Config
+}
 
 func main() {
 	// Initialize application with dependency injection

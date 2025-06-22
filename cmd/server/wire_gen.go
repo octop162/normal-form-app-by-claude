@@ -127,19 +127,6 @@ func provideExternalAPIManager(cfg *config.Config, log *logger.Logger) *external
 	return external.NewManager(managerConfig, log)
 }
 
-// Application holds all application components
-type Application struct {
-	UserHandler    *handler.UserHandler
-	SessionHandler *handler.SessionHandler
-	OptionHandler  *handler.OptionHandler
-	AddressHandler *handler.AddressHandler
-	PlanHandler    *handler.PlanHandler
-	HealthHandler  *handler.HealthHandler
-	DB             *sql.DB
-	Logger         *logger.Logger
-	Config         *config.Config
-}
-
 // Repository provider set
 var repositorySet = wire.NewSet(repository.NewUserRepository, repository.NewSessionRepository, repository.NewUserOptionRepository, repository.NewOptionRepository, repository.NewPrefectureRepository)
 
