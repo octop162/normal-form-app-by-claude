@@ -1,0 +1,68 @@
+{
+  "recommendations": [
+    // Language support
+    "golang.go",
+    "ms-vscode.vscode-typescript-next",
+    
+    // React/TypeScript
+    "ms-vscode.vscode-json",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    
+    // Linting and formatting
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "stylelint.vscode-stylelint",
+    "davidanson.vscode-markdownlint",
+    
+    // Git
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // Docker
+    "ms-azuretools.vscode-docker",
+    
+    // Database
+    "ms-mssql.mssql",
+    "cweijan.vscode-postgresql-client2",
+    
+    // Testing
+    "ms-playwright.playwright",
+    "vitest.explorer",
+    
+    // Productivity
+    "ms-vsliveshare.vsliveshare",
+    "alefragnani.bookmarks",
+    "gruntfuggly.todo-tree",
+    "aaron-bond.better-comments",
+    "usernamehw.errorlens",
+    
+    // Theme and UI
+    "pkief.material-icon-theme",
+    "ms-vscode.theme-tomorrowkit",
+    
+    // Utilities
+    "ms-vscode.hexeditor",
+    "redhat.vscode-yaml",
+    "ms-vscode.makefile-tools",
+    "editorconfig.editorconfig",
+    
+    // API testing
+    "humao.rest-client",
+    
+    // Code analysis
+    "sonarqube.sonarlint-vscode",
+    
+    // Documentation
+    "yzane.markdown-pdf",
+    "shd101wyy.markdown-preview-enhanced"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-typescript",
+    "hookyqr.beautify",
+    "ms-vscode.vscode-json"
+  ]
+}

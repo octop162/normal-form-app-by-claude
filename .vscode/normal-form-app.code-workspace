@@ -1,0 +1,62 @@
+{
+  "folders": [
+    {
+      "name": "Root",
+      "path": ".."
+    },
+    {
+      "name": "Backend (Go)",
+      "path": "../"
+    },
+    {
+      "name": "Frontend (React)",
+      "path": "../frontend"
+    }
+  ],
+  "settings": {
+    "go.gopath": "",
+    "go.goroot": "",
+    "go.toolsGopath": "",
+    "go.inferGopath": true,
+    "typescript.preferences.includePackageJsonAutoImports": "auto",
+    "eslint.workingDirectories": [
+      "frontend"
+    ],
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/vendor": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.git": true
+    },
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/vendor": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "golang.go",
+      "ms-vscode.vscode-typescript-next",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "eamodio.gitlens",
+      "ms-azuretools.vscode-docker",
+      "ms-playwright.playwright",
+      "editorconfig.editorconfig"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": []
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": []
+  }
+}
