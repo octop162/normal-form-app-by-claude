@@ -261,17 +261,52 @@ type AddressService interface {
 
 ## API設計
 
-### エンドポイント
+### 実装済みエンドポイント（Phase 1）
+
+#### ヘルスチェック系
+```
+GET    /health                          # 総合ヘルスチェック
+GET    /health/live                     # Liveness Probe（Kubernetes対応）
+GET    /health/ready                    # Readiness Probe（Kubernetes対応）
+```
+
+#### テスト・デバッグ系
+```
+GET    /api/v1/ping                     # API疎通確認
+```
+
+### 実装予定エンドポイント（Phase 2以降）
+
+#### ユーザー登録系
 ```
 POST   /api/v1/users                    # ユーザー登録
 POST   /api/v1/users/validate           # バリデーション
-POST   /api/v1/sessions                 # セッション作成
+```
+
+#### セッション管理系
+```
+POST   /api/v1/sessions                 # セッション作成（一時保存）
 GET    /api/v1/sessions/{id}            # セッション取得
 PUT    /api/v1/sessions/{id}            # セッション更新
-GET    /api/v1/options                  # オプション取得
+DELETE /api/v1/sessions/{id}            # セッション削除
+```
+
+#### オプション・在庫系
+```
+GET    /api/v1/options                  # オプション一覧取得
 POST   /api/v1/options/check-inventory  # 在庫チェック
-GET    /api/v1/address/search           # 住所検索
+```
+
+#### 住所・地域系
+```
+GET    /api/v1/address/search           # 住所検索（郵便番号）
 POST   /api/v1/region/check             # 地域制限チェック
+```
+
+#### マスターデータ系
+```
+GET    /api/v1/prefectures              # 都道府県一覧取得
+GET    /api/v1/plans                    # プラン一覧取得
 ```
 
 ### レスポンス形式
@@ -486,14 +521,14 @@ jobs:
       - golangci-lint実行
       - go test実行
       - カバレッジ測定（80%以上）
-  
+
   frontend-quality:
     steps:
       - ESLint実行
       - Prettier チェック
       - TypeScript型チェック
       - Jest テスト実行
-      
+
   e2e-tests:
     needs: [go-quality, frontend-quality]
     steps:
@@ -531,12 +566,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-    
+
     if err := h.userService.CreateUser(c.Request.Context(), &req); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
-    
+
     c.JSON(http.StatusCreated, gin.H{"message": "User created successfully"})
 }
 ```
@@ -550,7 +585,7 @@ interface UserInputProps {
 
 export const UserInput: React.FC<UserInputProps> = ({ onSubmit, isLoading }) => {
   const { register, handleSubmit, formState: { errors } } = useForm<UserFormData>();
-  
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       {/* フォーム実装 */}
@@ -620,11 +655,11 @@ test('会員登録正常フロー', async ({ page }) => {
   await page.fill('[data-testid="first-name"]', '太郎');
   // ... 全項目入力
   await page.click('[data-testid="next-button"]');
-  
+
   // 確認画面
   await expect(page.locator('[data-testid="confirm-name"]')).toContainText('田中 太郎');
   await page.click('[data-testid="submit-button"]');
-  
+
   // 完了画面
   await expect(page.locator('[data-testid="success-message"]')).toBeVisible();
 });
@@ -635,7 +670,7 @@ test('会員登録正常フロー', async ({ page }) => {
 test('必須項目未入力エラー', async ({ page }) => {
   await page.goto('/');
   await page.click('[data-testid="next-button"]');
-  
+
   await expect(page.locator('[data-testid="last-name-error"]')).toContainText('姓は必須です');
   await expect(page.locator('[data-testid="first-name-error"]')).toContainText('名は必須です');
 });
@@ -644,7 +679,7 @@ test('メールアドレス形式エラー', async ({ page }) => {
   await page.goto('/');
   await page.fill('[data-testid="email"]', 'invalid-email');
   await page.blur('[data-testid="email"]');
-  
+
   await expect(page.locator('[data-testid="email-error"]')).toContainText('正しいメールアドレスを入力してください');
 });
 ```
@@ -656,7 +691,7 @@ test('住所自動検索', async ({ page }) => {
   await page.fill('[data-testid="postal-code-1"]', '100');
   await page.fill('[data-testid="postal-code-2"]', '0001');
   await page.click('[data-testid="address-search-button"]');
-  
+
   await expect(page.locator('[data-testid="prefecture"]')).toHaveValue('東京都');
   await expect(page.locator('[data-testid="city"]')).toHaveValue('千代田区');
 });
@@ -666,10 +701,10 @@ test('在庫切れオプション制御', async ({ page }) => {
   await page.route('/api/v1/options/check-inventory', route => {
     route.fulfill({ json: { AA: 0, BB: 5, AB: 3 } });
   });
-  
+
   await page.goto('/');
   await page.selectOption('[data-testid="plan"]', 'A');
-  
+
   await expect(page.locator('[data-testid="option-AA"]')).toBeDisabled();
   await expect(page.locator('[data-testid="option-AB"]')).toBeEnabled();
 });
@@ -681,10 +716,10 @@ test('一時保存・復元機能', async ({ page }) => {
   await page.goto('/');
   await page.fill('[data-testid="last-name"]', '田中');
   await page.fill('[data-testid="first-name"]', '太郎');
-  
+
   // ページリロード
   await page.reload();
-  
+
   // データが復元されることを確認
   await expect(page.locator('[data-testid="last-name"]')).toHaveValue('田中');
   await expect(page.locator('[data-testid="first-name"]')).toHaveValue('太郎');
@@ -695,10 +730,10 @@ test('セッションタイムアウト警告', async ({ page }) => {
   await page.addInitScript(() => {
     window.SESSION_TIMEOUT = 1000; // 1秒
   });
-  
+
   await page.goto('/');
   await page.waitForTimeout(1500);
-  
+
   await expect(page.locator('[data-testid="timeout-warning"]')).toBeVisible();
 });
 ```
@@ -708,7 +743,7 @@ test('セッションタイムアウト警告', async ({ page }) => {
 test('モバイル表示確認', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.goto('/');
-  
+
   // モバイル専用要素の確認
   await expect(page.locator('[data-testid="mobile-menu"]')).toBeVisible();
   await expect(page.locator('[data-testid="desktop-menu"]')).toBeHidden();
@@ -799,42 +834,42 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - uses: actions/setup-node@v4
       with:
         node-version: 18
-        
+
     - uses: actions/setup-go@v4
       with:
         go-version: '1.21'
-    
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Build Go server
       run: go build -o server cmd/server/main.go
-      
+
     - name: Start servers
       run: |
         ./server &
         npm run dev &
-        
+
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-      
+
     - name: Run Playwright tests
       run: npx playwright test
-      
+
     - uses: actions/upload-artifact@v4
       if: always()
       with:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
-        
+
     - uses: actions/upload-artifact@v4
       if: always()
       with:
@@ -952,7 +987,7 @@ CLAUDE.md の該当セクション
 ```
 main (master)
 ├── feature/phase1-setup          # フェーズ1実装
-├── feature/phase2-backend-core    # フェーズ2実装  
+├── feature/phase2-backend-core    # フェーズ2実装
 ├── feature/phase3-external-api    # フェーズ3実装
 └── hotfix/security-fix           # 緊急修正
 ```
@@ -1022,7 +1057,7 @@ Closes #XX
 - [ ] 作業中issueのステータス更新
 - [ ] ブロッカーや課題の特定
 
-#### 週次確認事項  
+#### 週次確認事項
 - [ ] フェーズ進捗の確認
 - [ ] マイルストーン達成状況確認
 - [ ] 次週の作業計画策定
@@ -1034,7 +1069,7 @@ Closes #XX
 ### 完了したタスク
 - Issue #XX: タスク名
 
-### 進行中のタスク  
+### 進行中のタスク
 - Issue #XX: タスク名 (進捗XX%)
 
 ### 次週の予定
