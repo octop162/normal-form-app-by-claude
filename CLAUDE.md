@@ -871,3 +871,175 @@ jobs:
 - 🔴 **高**: フェーズ1-3（基盤構築、バックエンドコア、外部API）
 - 🟡 **中**: フェーズ4-5（フロントエンド、セキュリティ・品質）
 - 🟢 **低**: フェーズ6-7（インフラ・デプロイ、運用準備）
+
+## GitHub開発フロー
+
+### GitHub Issues管理
+
+#### Issue構成
+- **総数**: 32個のissue（全フェーズ対応）
+- **命名規則**: `【Phase X】タスク名`
+- **ラベル体系**:
+  - **フェーズ**: `phase-1` ～ `phase-7`
+  - **技術領域**: `backend`, `frontend`, `database`, `api`, `infrastructure`
+  - **作業種別**: `setup`, `documentation`, `testing`, `security`
+
+#### Issue作成時の標準テンプレート
+```markdown
+## 概要
+タスクの目的と背景
+
+## タスク
+- [ ] 具体的な作業項目1
+- [ ] 具体的な作業項目2
+
+## 受け入れ条件
+- [ ] 完了の基準1
+- [ ] 完了の基準2
+
+## 参考
+CLAUDE.md の該当セクション
+```
+
+### GitHub Projects管理
+
+#### プロジェクトボード情報
+- **プロジェクト名**: 会員登録webフォーム開発
+- **URL**: https://github.com/users/octop162/projects/7
+- **管理対象**: 全32 issues
+
+#### ボードカラム構成
+- **📝 Todo**: 未着手タスク
+- **🚀 In Progress**: 作業中タスク
+- **👀 Review**: レビュー・確認中タスク
+- **✅ Done**: 完了タスク
+
+#### プロジェクトビュー
+- **Board View**: 進捗の可視化
+- **Table View**: 詳細情報とフィルタリング
+- **Roadmap View**: タイムライン管理
+
+### 自動化ワークフロー
+
+#### Issue自動追加ワークフロー
+- **ファイル**: `.github/workflows/add-to-project.yml`
+- **トリガー**: Issue作成・再開時
+- **機能**: 新しいissueを自動的にプロジェクト#7に追加
+
+#### 必要な設定
+1. **Personal Access Token作成**:
+   - Scopes: `repo`, `project`
+   - Name: `Project Auto-add Token`
+
+2. **Repository Secret設定**:
+   - Name: `ADD_TO_PROJECT_PAT`
+   - Value: 上記で作成したPAT
+
+### 開発ワークフロー
+
+#### 1. タスク開始フロー
+```
+1. GitHub Projects でTodoからタスクを選択
+2. Issue を "In Progress" に移動
+3. ローカルでfeatureブランチ作成
+4. 実装・テスト実施
+5. Pull Request作成
+6. レビュー・マージ
+7. Issue を "Done" に移動
+```
+
+#### 2. ブランチ戦略
+```
+main (master)
+├── feature/phase1-setup          # フェーズ1実装
+├── feature/phase2-backend-core    # フェーズ2実装  
+├── feature/phase3-external-api    # フェーズ3実装
+└── hotfix/security-fix           # 緊急修正
+```
+
+#### 3. コミットメッセージ規約
+```
+Type: Short description
+
+- Detailed explanation
+- Reference to issue #XX
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Types:**
+- `feat`: 新機能
+- `fix`: バグ修正
+- `docs`: ドキュメント
+- `style`: コードスタイル
+- `refactor`: リファクタリング
+- `test`: テスト
+- `chore`: その他
+
+#### 4. Pull Request テンプレート
+```markdown
+## 概要
+このPRで解決する課題と実装内容
+
+## 変更内容
+- [ ] 変更点1
+- [ ] 変更点2
+
+## テスト
+- [ ] 単体テスト実行
+- [ ] 統合テスト実行
+- [ ] 手動テスト実行
+
+## チェックリスト
+- [ ] コードレビュー済み
+- [ ] テストが通る
+- [ ] ドキュメント更新済み
+
+## 関連Issue
+Closes #XX
+```
+
+### 品質管理
+
+#### CI/CDパイプライン（予定）
+- **静的解析**: golangci-lint, ESLint
+- **テスト**: Unit, Integration, E2E
+- **ビルド**: Docker image作成
+- **デプロイ**: ECS環境への自動デプロイ
+
+#### コードレビュー基準
+- **機能要件**: 仕様書通りの実装
+- **コード品質**: 命名規則、アーキテクチャ遵守
+- **テスト**: 適切なテストカバレッジ
+- **セキュリティ**: セキュリティ要件クリア
+
+### 進捗管理
+
+#### 日次確認事項
+- [ ] GitHub Projects ボードで進捗確認
+- [ ] 作業中issueのステータス更新
+- [ ] ブロッカーや課題の特定
+
+#### 週次確認事項  
+- [ ] フェーズ進捗の確認
+- [ ] マイルストーン達成状況確認
+- [ ] 次週の作業計画策定
+
+#### 報告フォーマット
+```
+## Week X Progress Report
+
+### 完了したタスク
+- Issue #XX: タスク名
+
+### 進行中のタスク  
+- Issue #XX: タスク名 (進捗XX%)
+
+### 次週の予定
+- Issue #XX: タスク名（着手予定）
+
+### ブロッカー・課題
+- 課題があれば記載
+```
