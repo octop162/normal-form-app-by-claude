@@ -113,17 +113,17 @@
   "extensions.ignoreRecommendations": false,
   "workbench.startupEditor": "readme",
   "workbench.colorTheme": "Default Dark+",
-  
+
   // Docker
   "docker.defaultBuildPath": "./Dockerfile",
-  
+
   // Live Share
   "liveshare.featureSet": "stable",
-  
+
   // GitLens
   "gitlens.currentLine.enabled": false,
   "gitlens.hovers.currentLine.over": "line",
-  
+
   // Auto Rename Tag
   "auto-rename-tag.activationOnLanguage": [
     "html",
@@ -158,5 +158,6 @@
   "debug.inlineValues": "on",
 
   // Workspace trust
-  "security.workspace.trust.untrustedFiles": "open"
+  "security.workspace.trust.untrustedFiles": "open",
+  "makefile.configureOnOpen": false
 }

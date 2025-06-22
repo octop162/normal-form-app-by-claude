@@ -1,0 +1,213 @@
+/* Validation Summary Styles */
+.validation-summary {
+  background-color: #ffebee;
+  border: 1px solid #e57373;
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.validation-summary__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.validation-summary__icon {
+  font-size: 1.5rem;
+  margin-right: 0.75rem;
+}
+
+.validation-summary__title {
+  color: #c62828;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.validation-summary__overview {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #ffcdd2;
+  border-radius: 4px;
+}
+
+.validation-summary__count {
+  font-weight: 600;
+  color: #c62828;
+  margin: 0 0 0.5rem 0;
+}
+
+.validation-summary__critical {
+  font-weight: 500;
+  color: #d32f2f;
+  margin: 0;
+}
+
+.validation-summary__errors {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.validation-summary__group {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 1rem;
+  background-color: #fff;
+}
+
+.validation-summary__group-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.validation-summary__error-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.validation-summary__error-item {
+  margin-bottom: 0.5rem;
+}
+
+.validation-summary__error-item:last-child {
+  margin-bottom: 0;
+}
+
+.validation-summary__error-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.validation-summary__error-link:hover {
+  background-color: #e0e0e0;
+  border-color: #999;
+}
+
+.validation-summary__error-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  border-color: #1976d2;
+}
+
+.validation-summary__field-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.validation-summary__error-message {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.validation-summary__ungrouped-error {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.validation-summary__actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.validation-summary__instruction {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .validation-summary {
+    padding: 1rem;
+  }
+
+  .validation-summary__header {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .validation-summary__icon {
+    margin-bottom: 0.5rem;
+    margin-right: 0;
+  }
+
+  .validation-summary__title {
+    font-size: 1.1rem;
+  }
+
+  .validation-summary__overview {
+    padding: 0.75rem;
+  }
+
+  .validation-summary__group {
+    padding: 0.75rem;
+  }
+
+  .validation-summary__error-link {
+    padding: 0.5rem;
+  }
+
+  .validation-summary__field-name {
+    font-size: 0.875rem;
+  }
+
+  .validation-summary__error-message {
+    font-size: 0.8rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .validation-summary {
+    border: 2px solid #d32f2f;
+    background-color: #ffebee;
+  }
+
+  .validation-summary__error-link {
+    border: 2px solid #999;
+  }
+
+  .validation-summary__error-link:hover {
+    border: 2px solid #333;
+  }
+
+  .validation-summary__error-link:focus {
+    border: 2px solid #1976d2;
+    box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.3);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .validation-summary__error-link {
+    transition: none;
+  }
+}

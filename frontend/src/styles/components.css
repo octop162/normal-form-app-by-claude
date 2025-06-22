@@ -1,0 +1,625 @@
+/* Component styles for membership registration form */
+
+/* Form Field Styles */
+.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.form-field__label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.form-field__required {
+  color: #d32f2f;
+  margin-left: 0.25rem;
+}
+
+.form-field__input,
+.form-field__select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.form-field__input:focus,
+.form-field__select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+}
+
+.form-field__input--error,
+.form-field__select--error {
+  border-color: #d32f2f;
+}
+
+.form-field__help {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.form-field__error {
+  font-size: 0.875rem;
+  color: #d32f2f;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.form-field__error::before {
+  content: "⚠️";
+  margin-right: 0.25rem;
+}
+
+/* Form Row Styles */
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row > * {
+  flex: 1;
+}
+
+.form-row--phone {
+  align-items: end;
+}
+
+.form-row--postal {
+  align-items: end;
+}
+
+.form-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #666;
+  margin: 0 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Button Styles */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+  position: relative;
+}
+
+.button--primary {
+  background-color: #1976d2;
+  color: white;
+}
+
+.button--primary:hover:not(:disabled) {
+  background-color: #1565c0;
+}
+
+.button--secondary {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.button--outline {
+  background-color: transparent;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+
+.button--outline:hover:not(:disabled) {
+  background-color: #1976d2;
+  color: white;
+}
+
+.button--danger {
+  background-color: #d32f2f;
+  color: white;
+}
+
+.button--danger:hover:not(:disabled) {
+  background-color: #c62828;
+}
+
+.button--small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.button--large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+.button--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button--loading {
+  cursor: wait;
+}
+
+.button__spinner {
+  margin-right: 0.5rem;
+  animation: spin 1s linear infinite;
+}
+
+.button__text--loading {
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Checkbox Group Styles */
+.checkbox-group {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.checkbox-group--error {
+  border-color: #d32f2f;
+}
+
+.checkbox-group__legend {
+  font-weight: 600;
+  color: #333;
+  padding: 0 0.5rem;
+}
+
+.checkbox-group__required {
+  color: #d32f2f;
+  margin-left: 0.25rem;
+}
+
+.checkbox-group__options {
+  margin-top: 1rem;
+}
+
+.checkbox-group__option {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.checkbox-group__option:last-child {
+  margin-bottom: 0;
+}
+
+.checkbox-group__input {
+  margin-right: 0.75rem;
+  margin-top: 0.125rem;
+}
+
+.checkbox-group__label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.checkbox-group__label-text {
+  font-weight: 500;
+  color: #333;
+}
+
+.checkbox-group__description {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.checkbox-group__help {
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.checkbox-group__error {
+  font-size: 0.875rem;
+  color: #d32f2f;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group__error::before {
+  content: "⚠️";
+  margin-right: 0.25rem;
+}
+
+/* Loading Spinner Styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  display: inline-block;
+  position: relative;
+}
+
+.loading-spinner--small {
+  width: 20px;
+  height: 20px;
+}
+
+.loading-spinner--medium {
+  width: 40px;
+  height: 40px;
+}
+
+.loading-spinner--large {
+  width: 60px;
+  height: 60px;
+}
+
+.loading-spinner__circle {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-message {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Error Message Styles */
+.error-message {
+  display: flex;
+  align-items: flex-start;
+  padding: 1rem;
+  background-color: #ffebee;
+  border: 1px solid #e57373;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.error-message__icon {
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.error-message__content {
+  flex: 1;
+}
+
+.error-message__text {
+  color: #c62828;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.error-message__code {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  font-family: monospace;
+}
+
+/* Step Indicator Styles */
+.step-indicator {
+  margin-bottom: 2rem;
+}
+
+.step-indicator__container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.step-indicator__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-indicator__step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.step-indicator__step--active .step-indicator__step-circle {
+  background-color: #1976d2;
+  color: white;
+}
+
+.step-indicator__step--completed .step-indicator__step-circle {
+  background-color: #4caf50;
+  color: white;
+}
+
+.step-indicator__step-label {
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
+}
+
+.step-indicator__step--active .step-indicator__step-label {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.step-indicator__step--completed .step-indicator__step-label {
+  color: #4caf50;
+}
+
+.step-indicator__progress-bar {
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.step-indicator__progress-fill {
+  height: 100%;
+  background-color: #1976d2;
+  transition: width 0.3s ease-in-out;
+}
+
+/* Session Timeout Warning Styles */
+.session-timeout-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-timeout-warning__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.session-timeout-warning__modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.session-timeout-warning__title {
+  margin: 0 0 1rem 0;
+  color: #d32f2f;
+  font-size: 1.25rem;
+}
+
+.session-timeout-warning__message {
+  margin-bottom: 1rem;
+  color: #333;
+  line-height: 1.5;
+}
+
+.session-timeout-warning__time {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.session-timeout-warning__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* Form Navigation Styles */
+.form-navigation {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 2rem;
+  margin-top: 2rem;
+}
+
+.form-navigation__buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-navigation__spacer {
+  flex: 1;
+}
+
+/* Search Message Styles */
+.search-message {
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.search-message--success {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.search-message--error {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #e57373;
+}
+
+/* Availability Info Styles */
+.availability-info {
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.availability-info h4 {
+  margin: 0 0 0.75rem 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.availability-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.availability-item:last-child {
+  margin-bottom: 0;
+}
+
+.availability-option {
+  font-weight: 500;
+  color: #333;
+}
+
+.availability-status {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.availability-status--available {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.availability-status--out-of-stock {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.availability-status--restricted {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .form-row--phone,
+  .form-row--postal {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+  
+  .form-separator {
+    margin-bottom: 0;
+  }
+  
+  .step-indicator__container {
+    margin-bottom: 0.5rem;
+  }
+  
+  .step-indicator__step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
+  
+  .step-indicator__step-label {
+    font-size: 0.75rem;
+  }
+  
+  .form-navigation__buttons {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
+  
+  .form-navigation__spacer {
+    display: none;
+  }
+  
+  .button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .session-timeout-warning__modal {
+    padding: 1.5rem;
+  }
+  
+  .session-timeout-warning__actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .availability-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}

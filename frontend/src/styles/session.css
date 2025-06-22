@@ -1,0 +1,327 @@
+/* Session management component styles */
+
+/* Session Status Component */
+.session-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.session-status__indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.session-status__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 1rem;
+}
+
+.session-status__icon--active {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.session-status__icon--inactive {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.session-status__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.session-status__label {
+  font-weight: 500;
+  color: #333;
+}
+
+.session-status__details {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.session-status__auto-save {
+  font-style: italic;
+}
+
+.session-status__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #ffebee;
+  border: 1px solid #e57373;
+  border-radius: 3px;
+  color: #c62828;
+  font-size: 0.8rem;
+}
+
+.session-status__error-icon {
+  font-size: 1rem;
+}
+
+.session-status__error-text {
+  flex: 1;
+}
+
+.session-status__warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 3px;
+  color: #f57c00;
+  font-size: 0.8rem;
+}
+
+.session-status__warning-icon {
+  font-size: 1rem;
+}
+
+.session-status__warning-text {
+  flex: 1;
+}
+
+.session-status__controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* Session Recovery Dialog */
+.session-recovery-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-recovery-dialog__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.session-recovery-dialog__modal {
+  background-color: white;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  z-index: 1101;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.session-recovery-dialog__header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.session-recovery-dialog__title {
+  color: #1976d2;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.session-recovery-dialog__content {
+  margin-bottom: 2rem;
+}
+
+.session-recovery-dialog__message {
+  color: #333;
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.session-recovery-dialog__info {
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.session-recovery-dialog__timestamp {
+  font-weight: 500;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.session-recovery-dialog__warning {
+  background-color: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.session-recovery-dialog__warning h4 {
+  color: #f57c00;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.session-recovery-dialog__warning ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #666;
+}
+
+.session-recovery-dialog__warning li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.session-recovery-dialog__actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Enhanced Session Timeout Warning */
+.session-timeout-warning__options {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.session-timeout-warning__options h4 {
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.session-timeout-warning__options ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #555;
+}
+
+.session-timeout-warning__options li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.session-timeout-warning__options strong {
+  color: #333;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .session-status {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .session-status__controls {
+    flex-direction: column;
+  }
+
+  .session-status__controls .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .session-recovery-dialog__modal {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .session-recovery-dialog__actions {
+    flex-direction: column;
+  }
+
+  .session-recovery-dialog__actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .session-timeout-warning__actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .session-timeout-warning__actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .session-status {
+    border: 2px solid #333;
+  }
+
+  .session-status__error {
+    border: 2px solid #d32f2f;
+  }
+
+  .session-status__warning {
+    border: 2px solid #f57c00;
+  }
+
+  .session-recovery-dialog__modal {
+    border: 2px solid #333;
+  }
+
+  .session-recovery-dialog__info {
+    border: 2px solid #1976d2;
+  }
+
+  .session-recovery-dialog__warning {
+    border: 2px solid #f57c00;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .session-recovery-dialog__modal,
+  .session-timeout-warning__modal {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .session-status,
+  .session-recovery-dialog,
+  .session-timeout-warning {
+    display: none;
+  }
+}
