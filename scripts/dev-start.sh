@@ -169,6 +169,30 @@ start_database() {
     print_success "PostgreSQL started successfully"
 }
 
+start_mock_server() {
+    print_status "Starting Mock API server..."
+
+    # Kill existing mock server processes
+    pkill -f "go run cmd/mock-server/main.go" 2>/dev/null || true
+    pkill -f "cmd/mock-server/main.go" 2>/dev/null || true
+
+    # Wait a moment for processes to terminate
+    sleep 2
+
+    # Start mock server in background
+    nohup go run cmd/mock-server/main.go > logs/mock-server.log 2>&1 &
+    MOCK_PID=$!
+    echo $MOCK_PID > logs/mock-server.pid
+
+    # Wait for mock server to be ready
+    wait_for_service "Mock API Server" "http://localhost:8081/health" || {
+        print_error "Failed to start Mock API server"
+        return 1
+    }
+
+    print_success "Mock API server started successfully (PID: $MOCK_PID)"
+}
+
 start_backend() {
     print_status "Starting Go backend..."
 
@@ -178,6 +202,11 @@ start_backend() {
 
     # Wait a moment for processes to terminate
     sleep 2
+
+    # Set environment variables for external APIs
+    export INVENTORY_API_URL="http://localhost:8081"
+    export REGION_API_URL="http://localhost:8081"
+    export ADDRESS_API_URL="http://localhost:8081"
 
     # Start Go server in background
     nohup go run cmd/server/main.go > logs/backend.log 2>&1 &
@@ -226,10 +255,11 @@ start_docker_environment() {
     docker-compose down 2>/dev/null || true
 
     # Start all services with Docker
-    docker-compose --profile backend --profile frontend up -d
+    docker-compose --profile mock --profile backend --profile frontend up -d
 
     # Wait for all services
     wait_for_postgres
+    wait_for_service "Mock API Server" "http://localhost:8081/health"
     wait_for_service "Go Backend" "http://localhost:8080/health"
     wait_for_service "React Frontend" "http://localhost:3000"
 
@@ -252,6 +282,13 @@ show_status() {
         echo -e "PostgreSQL: ${RED}Not running${NC}"
     fi
 
+    # Check Mock API Server
+    if curl -s http://localhost:8081/health > /dev/null 2>&1; then
+        echo -e "Mock API Server: ${GREEN}Running${NC} (localhost:8081)"
+    else
+        echo -e "Mock API Server: ${RED}Not running${NC}"
+    fi
+
     # Check Go backend
     if curl -s http://localhost:8080/health > /dev/null 2>&1; then
         echo -e "Go Backend: ${GREEN}Running${NC} (localhost:8080)"
@@ -272,6 +309,7 @@ show_status() {
     echo "To access the application:"
     echo "  Frontend: http://localhost:5173 (or http://localhost:3000 for Docker)"
     echo "  Backend API: http://localhost:8080"
+    echo "  Mock API Server: http://localhost:8081"
     echo "  Health Check: http://localhost:8080/health"
     echo ""
 }
@@ -282,9 +320,10 @@ show_help() {
     echo "Usage: $0 [OPTION]"
     echo ""
     echo "Options:"
-    echo "  all       Start all services (database + backend + frontend) [default]"
+    echo "  all       Start all services (database + mock + backend + frontend) [default]"
     echo "  db        Start only PostgreSQL database"
-    echo "  backend   Start only Go backend (requires database)"
+    echo "  mock      Start only Mock API server"
+    echo "  backend   Start only Go backend (requires database and mock)"
     echo "  frontend  Start only React frontend"
     echo "  docker    Start complete environment using Docker"
     echo "  status    Show current services status"
@@ -318,6 +357,7 @@ main() {
             check_prerequisites
             setup_environment
             start_database
+            start_mock_server
             start_backend
             start_frontend
             show_status
@@ -325,6 +365,11 @@ main() {
         "db"|"database")
             check_prerequisites
             start_database
+            ;;
+        "mock"|"mock-server")
+            create_logs_directory
+            check_prerequisites
+            start_mock_server
             ;;
         "backend"|"api")
             create_logs_directory

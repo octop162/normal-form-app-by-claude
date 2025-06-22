@@ -9,6 +9,7 @@ import (
 	"github.com/octop162/normal-form-app-by-claude/internal/dto"
 	"github.com/octop162/normal-form-app-by-claude/internal/model"
 	"github.com/octop162/normal-form-app-by-claude/internal/repository"
+	"github.com/octop162/normal-form-app-by-claude/pkg/external"
 	"github.com/octop162/normal-form-app-by-claude/pkg/logger"
 )
 
@@ -28,23 +29,26 @@ type AddressService interface {
 // addressService implements AddressService
 type addressService struct {
 	prefectureRepo repository.PrefectureRepository
+	externalAPI    *external.Manager
 	log            *logger.Logger
 }
 
 // NewAddressService creates a new address service
 func NewAddressService(
 	prefectureRepo repository.PrefectureRepository,
+	externalAPI *external.Manager,
 	log *logger.Logger,
 ) AddressService {
 	return &addressService{
 		prefectureRepo: prefectureRepo,
+		externalAPI:    externalAPI,
 		log:            log,
 	}
 }
 
 // SearchByPostalCode searches for address information by postal code
 func (s *addressService) SearchByPostalCode(
-	_ context.Context, req *dto.AddressSearchRequest,
+	ctx context.Context, req *dto.AddressSearchRequest,
 ) (*dto.AddressSearchResponse, error) {
 	// Validate postal code format (should be 7 digits)
 	if len(req.PostalCode) != postalCodeLength {
@@ -53,10 +57,24 @@ func (s *addressService) SearchByPostalCode(
 		}, nil
 	}
 
-	// TODO: Call external postal code API to get actual address data
-	// For now, return mock data based on well-known postal codes
-	address := s.getMockAddressData(req.PostalCode)
+	// Try external address API first if available
+	if s.externalAPI != nil && s.externalAPI.AddressClient() != nil {
+		addressInfo, err := s.externalAPI.AddressClient().SearchByPostalCode(ctx, req.PostalCode)
+		if err != nil {
+			s.log.WithError(err).WithField("postal_code", req.PostalCode).Warn("External address API failed, falling back to mock data")
+		} else {
+			return &dto.AddressSearchResponse{
+				Found:      true,
+				Prefecture: addressInfo.Prefecture,
+				City:       addressInfo.City,
+				Town:       addressInfo.Town,
+				PostalCode: formatPostalCode(req.PostalCode),
+			}, nil
+		}
+	}
 
+	// Fallback to mock data
+	address := s.getMockAddressData(req.PostalCode)
 	if address == nil {
 		return &dto.AddressSearchResponse{
 			Found: false,
@@ -78,14 +96,32 @@ func (s *addressService) CheckRegionRestrictions(
 ) (*dto.RegionCheckResponse, error) {
 	restrictions := make(map[string]bool)
 
-	// Get prefecture information to determine region
+	// Try external region API first if available
+	if s.externalAPI != nil && s.externalAPI.RegionClient() != nil {
+		regionRestrictions, err := s.externalAPI.RegionClient().CheckRegionRestrictions(
+			ctx, req.Prefecture, req.City, req.OptionTypes,
+		)
+		if err != nil {
+			s.log.WithError(err).
+				WithField("prefecture", req.Prefecture).
+				WithField("city", req.City).
+				WithField("options", req.OptionTypes).
+				Warn("External region API failed, falling back to local logic")
+		} else {
+			return &dto.RegionCheckResponse{
+				Restrictions: regionRestrictions,
+			}, nil
+		}
+	}
+
+	// Fallback to local logic
 	prefecture, err := s.prefectureRepo.GetByName(ctx, req.Prefecture)
 	if err != nil {
 		s.log.WithError(err).WithField("prefecture", req.Prefecture).Error("Failed to get prefecture")
 		return nil, fmt.Errorf("failed to get prefecture: %w", err)
 	}
 
-	// Check restrictions for each option type
+	// Check restrictions for each option type using local logic
 	for _, optionType := range req.OptionTypes {
 		allowed := s.checkOptionAllowedInRegion(prefecture, req.City, optionType)
 		restrictions[optionType] = allowed

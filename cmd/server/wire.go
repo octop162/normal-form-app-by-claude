@@ -13,6 +13,7 @@ import (
 	"github.com/octop162/normal-form-app-by-claude/internal/service"
 	"github.com/octop162/normal-form-app-by-claude/pkg/config"
 	"github.com/octop162/normal-form-app-by-claude/pkg/database"
+	"github.com/octop162/normal-form-app-by-claude/pkg/external"
 	"github.com/octop162/normal-form-app-by-claude/pkg/logger"
 	"github.com/octop162/normal-form-app-by-claude/pkg/validator"
 )
@@ -38,6 +39,40 @@ func provideCleanupFunc(db *database.DB) func() {
 			}
 		}
 	}
+}
+
+func provideExternalAPIManager(cfg *config.Config, log *logger.Logger) *external.Manager {
+	managerConfig := &external.ManagerConfig{}
+	
+	// Only create clients if base URLs are configured
+	if cfg.ExternalAPI.InventoryAPI.BaseURL != "" {
+		managerConfig.InventoryAPI = &external.Config{
+			BaseURL:    cfg.ExternalAPI.InventoryAPI.BaseURL,
+			Timeout:    cfg.ExternalAPI.InventoryAPI.Timeout,
+			MaxRetries: cfg.ExternalAPI.InventoryAPI.MaxRetries,
+			RetryDelay: cfg.ExternalAPI.InventoryAPI.RetryDelay,
+		}
+	}
+	
+	if cfg.ExternalAPI.RegionAPI.BaseURL != "" {
+		managerConfig.RegionAPI = &external.Config{
+			BaseURL:    cfg.ExternalAPI.RegionAPI.BaseURL,
+			Timeout:    cfg.ExternalAPI.RegionAPI.Timeout,
+			MaxRetries: cfg.ExternalAPI.RegionAPI.MaxRetries,
+			RetryDelay: cfg.ExternalAPI.RegionAPI.RetryDelay,
+		}
+	}
+	
+	if cfg.ExternalAPI.AddressAPI.BaseURL != "" {
+		managerConfig.AddressAPI = &external.Config{
+			BaseURL:    cfg.ExternalAPI.AddressAPI.BaseURL,
+			Timeout:    cfg.ExternalAPI.AddressAPI.Timeout,
+			MaxRetries: cfg.ExternalAPI.AddressAPI.MaxRetries,
+			RetryDelay: cfg.ExternalAPI.AddressAPI.RetryDelay,
+		}
+	}
+	
+	return external.NewManager(managerConfig, log)
 }
 
 // Application holds all application components
@@ -88,6 +123,7 @@ var infrastructureSet = wire.NewSet(
 	provideDB,
 	provideSQLDB,
 	provideCleanupFunc,
+	provideExternalAPIManager,
 	validator.NewValidator,
 )
 

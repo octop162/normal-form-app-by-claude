@@ -8,6 +8,7 @@ import (
 	"github.com/octop162/normal-form-app-by-claude/internal/dto"
 	"github.com/octop162/normal-form-app-by-claude/internal/model"
 	"github.com/octop162/normal-form-app-by-claude/internal/repository"
+	"github.com/octop162/normal-form-app-by-claude/pkg/external"
 	"github.com/octop162/normal-form-app-by-claude/pkg/logger"
 )
 
@@ -28,18 +29,21 @@ type OptionService interface {
 
 // optionService implements OptionService
 type optionService struct {
-	optionRepo repository.OptionRepository
-	log        *logger.Logger
+	optionRepo  repository.OptionRepository
+	externalAPI *external.Manager
+	log         *logger.Logger
 }
 
 // NewOptionService creates a new option service
 func NewOptionService(
 	optionRepo repository.OptionRepository,
+	externalAPI *external.Manager,
 	log *logger.Logger,
 ) OptionService {
 	return &optionService{
-		optionRepo: optionRepo,
-		log:        log,
+		optionRepo:  optionRepo,
+		externalAPI: externalAPI,
+		log:         log,
 	}
 }
 
@@ -88,7 +92,28 @@ func (s *optionService) CheckInventory(
 ) (*dto.InventoryCheckResponse, error) {
 	inventory := make(map[string]int)
 
-	// For each option type, check if it exists and get inventory
+	// Try external inventory API first if available
+	if s.externalAPI != nil && s.externalAPI.InventoryClient() != nil {
+		externalInventory, err := s.externalAPI.InventoryClient().CheckInventory(ctx, req.OptionTypes)
+		if err != nil {
+			s.log.WithError(err).WithField("option_types", req.OptionTypes).Warn("External inventory API failed, falling back to local logic")
+		} else {
+			// Validate options exist in local database and are active
+			for optionType, stock := range externalInventory {
+				option, err := s.optionRepo.GetByOptionType(ctx, optionType)
+				if err != nil || !option.IsActive {
+					inventory[optionType] = 0
+				} else {
+					inventory[optionType] = stock
+				}
+			}
+			return &dto.InventoryCheckResponse{
+				Inventory: inventory,
+			}, nil
+		}
+	}
+
+	// Fallback to local logic
 	for _, optionType := range req.OptionTypes {
 		option, err := s.optionRepo.GetByOptionType(ctx, optionType)
 		if err != nil {
@@ -104,8 +129,7 @@ func (s *optionService) CheckInventory(
 			continue
 		}
 
-		// TODO: Call external inventory API to get actual inventory levels
-		// For now, return mock data
+		// Use mock data as fallback
 		inventoryLevel := s.getMockInventoryLevel(optionType)
 		inventory[optionType] = inventoryLevel
 	}

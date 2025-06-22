@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   # PostgreSQL Database
@@ -17,6 +16,21 @@ services:
     networks:
       - app-network
 
+  # Mock API Server
+  mock-server:
+    build:
+      context: .
+      dockerfile: cmd/mock-server/Dockerfile
+    container_name: normal-form-mock-api
+    environment:
+      - MOCK_PORT=8081
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    profiles:
+      - mock
+
   # Go Backend
   backend:
     build:
@@ -31,10 +45,15 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-postgres}
       - LOG_LEVEL=${LOG_LEVEL:-debug}
       - SESSION_TIMEOUT=${SESSION_TIMEOUT:-4h}
+      # External API URLs pointing to mock server
+      - INVENTORY_API_URL=http://mock-server:8081
+      - REGION_API_URL=http://mock-server:8081
+      - ADDRESS_API_URL=http://mock-server:8081
     ports:
       - "8080:8080"
     depends_on:
       - postgres
+      - mock-server
     volumes:
       - .:/app
     working_dir: /app
