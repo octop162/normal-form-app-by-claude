@@ -26,7 +26,17 @@ git clone https://github.com/octop162/normal-form-app-by-claude.git
 cd normal-form-app-by-claude
 ```
 
-### 2. 環境変数設定
+### 2. 自動セットアップ（推奨）
+
+```bash
+# 全自動で環境構築・起動
+./scripts/dev-start.sh
+
+# ヘルスチェック
+./scripts/health-check.sh
+```
+
+### 3. 手動セットアップ
 
 ```bash
 # .envファイルをコピー（既に存在する場合はスキップ）
@@ -34,11 +44,7 @@ cp .env.example .env
 
 # 必要に応じて.envファイルを編集
 vim .env
-```
 
-### 3. 依存関係インストール
-
-```bash
 # Go依存関係
 go mod download
 
@@ -49,6 +55,22 @@ cd ..
 ```
 
 ## 🏃 開発環境起動
+
+### 簡単起動（推奨）
+
+```bash
+# 全サービス起動
+./scripts/dev-start.sh
+
+# 特定サービスのみ起動
+./scripts/dev-start.sh db        # データベースのみ
+./scripts/dev-start.sh backend   # バックエンドのみ
+./scripts/dev-start.sh frontend  # フロントエンドのみ
+./scripts/dev-start.sh docker    # Docker環境で起動
+
+# 起動状況確認
+./scripts/dev-start.sh status
+```
 
 ### オプション1: 全サービス一括起動（推奨）
 
@@ -107,7 +129,25 @@ npm run dev -- --host 0.0.0.0
 
 ## 🧪 動作確認
 
-### ヘルスチェック
+### 自動ヘルスチェック（推奨）
+
+```bash
+# 全サービスの状態確認
+./scripts/health-check.sh
+
+# 詳細情報表示
+./scripts/health-check.sh detailed
+
+# 簡単なテスト実行
+./scripts/health-check.sh quick
+
+# 特定サービスのみチェック
+./scripts/health-check.sh db        # データベースのみ
+./scripts/health-check.sh backend   # バックエンドのみ
+./scripts/health-check.sh frontend  # フロントエンドのみ
+```
+
+### 手動テスト
 
 ```bash
 # Go serverの状態確認
@@ -115,11 +155,7 @@ curl http://localhost:8080/health
 
 # 期待される応答
 # {"service":"normal-form-app","status":"ok","version":"1.0.0"}
-```
 
-### API接続テスト
-
-```bash
 # APIエンドポイントテスト
 curl http://localhost:8080/api/v1/ping
 
@@ -141,7 +177,26 @@ SELECT * FROM health_check;  -- 初期データ確認
 
 ## 🛑 サービス停止
 
-### 全サービス停止
+### 簡単停止（推奨）
+
+```bash
+# 全サービス停止
+./scripts/dev-stop.sh
+
+# 特定サービスのみ停止
+./scripts/dev-stop.sh db        # データベースのみ
+./scripts/dev-stop.sh backend   # バックエンドのみ
+./scripts/dev-stop.sh frontend  # フロントエンドのみ
+./scripts/dev-stop.sh docker    # Docker環境停止
+
+# 強制停止（通常停止で問題がある場合）
+./scripts/dev-stop.sh force
+
+# 完全リセット（データも削除）
+./scripts/dev-stop.sh clean
+```
+
+### 手動停止
 
 ```bash
 # 実行中のプロセス停止
@@ -151,15 +206,6 @@ pkill -f "npm"
 
 # Dockerコンテナ停止
 docker-compose down
-```
-
-### 個別サービス停止
-
-```bash
-# PostgreSQL停止
-docker-compose stop postgres
-
-# Go/React はCtrl+Cまたは該当プロセスを停止
 ```
 
 ## 🐳 Docker開発環境
@@ -184,6 +230,99 @@ docker-compose logs -f
 docker-compose logs -f postgres
 docker-compose logs -f backend
 docker-compose logs -f frontend
+```
+
+## 🔧 開発スクリプト
+
+プロジェクトには開発を効率化するための3つのスクリプトが用意されています：
+
+### 📋 利用可能なスクリプト
+
+| スクリプト | 用途 | 主な機能 |
+|-----------|------|----------|
+| `./scripts/dev-start.sh` | 環境起動 | 依存関係インストール、サービス起動、自動セットアップ |
+| `./scripts/dev-stop.sh` | 環境停止 | プロセス停止、リソースクリーンアップ、データリセット |
+| `./scripts/health-check.sh` | 状態確認 | サービス監視、接続テスト、システム情報 |
+
+### 🚀 dev-start.sh の使用方法
+
+```bash
+# 基本的な使い方
+./scripts/dev-start.sh [option]
+
+# オプション一覧
+./scripts/dev-start.sh all       # 全サービス起動（デフォルト）
+./scripts/dev-start.sh db        # PostgreSQLのみ起動
+./scripts/dev-start.sh backend   # Go APIのみ起動
+./scripts/dev-start.sh frontend  # Reactのみ起動
+./scripts/dev-start.sh docker    # Docker環境で起動
+./scripts/dev-start.sh status    # 現在の状態確認
+./scripts/dev-start.sh help      # ヘルプ表示
+```
+
+### 🛑 dev-stop.sh の使用方法
+
+```bash
+# 基本的な使い方
+./scripts/dev-stop.sh [option]
+
+# オプション一覧
+./scripts/dev-stop.sh all       # 全サービス停止（デフォルト）
+./scripts/dev-stop.sh db        # PostgreSQLのみ停止
+./scripts/dev-stop.sh backend   # Go APIのみ停止
+./scripts/dev-stop.sh frontend  # Reactのみ停止
+./scripts/dev-stop.sh docker    # Docker環境停止
+./scripts/dev-stop.sh force     # 強制停止
+./scripts/dev-stop.sh clean     # 完全リセット（データ削除）
+./scripts/dev-stop.sh help      # ヘルプ表示
+```
+
+### 🩺 health-check.sh の使用方法
+
+```bash
+# 基本的な使い方
+./scripts/health-check.sh [option]
+
+# オプション一覧
+./scripts/health-check.sh all       # 全サービスチェック（デフォルト）
+./scripts/health-check.sh db        # データベースのみチェック
+./scripts/health-check.sh backend   # バックエンドのみチェック
+./scripts/health-check.sh frontend  # フロントエンドのみチェック
+./scripts/health-check.sh detailed  # 詳細システム情報表示
+./scripts/health-check.sh quick     # 簡単なテスト実行
+./scripts/health-check.sh summary   # サマリーのみ表示
+./scripts/health-check.sh help      # ヘルプ表示
+```
+
+### 🔄 典型的な開発フロー
+
+```bash
+# 1. 開発開始
+./scripts/dev-start.sh
+
+# 2. 状態確認
+./scripts/health-check.sh
+
+# 3. 開発作業...
+# コードを編集、テスト、デバッグ
+
+# 4. 終了
+./scripts/dev-stop.sh
+```
+
+### 🐛 トラブル時の対処
+
+```bash
+# サービスが正常に起動しない場合
+./scripts/dev-stop.sh force      # 強制停止
+./scripts/dev-start.sh           # 再起動
+
+# 完全にリセットしたい場合
+./scripts/dev-stop.sh clean      # データも含めて全削除
+./scripts/dev-start.sh           # 再起動
+
+# 詳細な問題調査
+./scripts/health-check.sh detailed  # システム情報確認
 ```
 
 ## 📁 プロジェクト構造
