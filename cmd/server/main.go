@@ -108,6 +108,12 @@ func setupRouter(app *Application) *gin.Engine {
 	r.Use(middleware.SimpleLoggerMiddleware(app.Logger))
 	r.Use(middleware.ErrorHandlerMiddleware(app.Logger))
 	r.Use(middleware.CORSMiddleware())
+	
+	// Security middleware
+	r.Use(middleware.SecurityHeaders())
+	r.Use(middleware.InputSanitization())
+	r.Use(middleware.RateLimit(100, 1*time.Minute)) // 100 requests per minute
+	r.Use(middleware.CSRF())
 
 	// Set up 404 and 405 handlers
 	r.NoRoute(middleware.NotFoundMiddleware())
@@ -126,10 +132,18 @@ func setupRouter(app *Application) *gin.Engine {
 	{
 		api.GET("/ping", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
-				"message": "pong",
-				"service": "normal-form-app",
-				"version": "1.0.0",
+				"success": true,
+				"data": gin.H{
+					"message": "pong",
+					"service": "normal-form-app",
+					"version": "1.0.0",
+				},
 			})
+		})
+		
+		// CSRF token endpoint - handled by CSRF middleware
+		api.GET("/csrf-token", func(c *gin.Context) {
+			// This route is handled by the CSRF middleware
 		})
 
 		// User endpoints

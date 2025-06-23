@@ -1,0 +1,308 @@
+{
+  "alarms": [
+    {
+      "alarmName": "normal-form-app-high-cpu",
+      "alarmDescription": "High CPU utilization in ECS service",
+      "metricName": "CPUUtilization",
+      "namespace": "AWS/ECS",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 80.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "ServiceName",
+          "value": "normal-form-app-service"
+        },
+        {
+          "name": "ClusterName",
+          "value": "normal-form-app-cluster"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}",
+        "${AUTO_SCALING_POLICY_ARN}"
+      ],
+      "okActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching",
+      "tags": [
+        {
+          "key": "Environment",
+          "value": "production"
+        },
+        {
+          "key": "Application",
+          "value": "normal-form-app"
+        }
+      ]
+    },
+    {
+      "alarmName": "normal-form-app-high-memory",
+      "alarmDescription": "High memory utilization in ECS service",
+      "metricName": "MemoryUtilization",
+      "namespace": "AWS/ECS",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 85.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "ServiceName",
+          "value": "normal-form-app-service"
+        },
+        {
+          "name": "ClusterName",
+          "value": "normal-form-app-cluster"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}",
+        "${AUTO_SCALING_POLICY_ARN}"
+      ],
+      "okActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "alarmName": "normal-form-app-alb-response-time",
+      "alarmDescription": "High response time from Application Load Balancer",
+      "metricName": "TargetResponseTime",
+      "namespace": "AWS/ApplicationELB",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 3,
+      "threshold": 2.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "LoadBalancer",
+          "value": "${ALB_FULL_NAME}"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "alarmName": "normal-form-app-alb-error-rate",
+      "alarmDescription": "High 5XX error rate from Application Load Balancer",
+      "metricName": "HTTPCode_Target_5XX_Count",
+      "namespace": "AWS/ApplicationELB",
+      "statistic": "Sum",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 10.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "LoadBalancer",
+          "value": "${ALB_FULL_NAME}"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "alarmName": "normal-form-app-unhealthy-targets",
+      "alarmDescription": "Unhealthy targets in target group",
+      "metricName": "UnHealthyHostCount",
+      "namespace": "AWS/ApplicationELB",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 1.0,
+      "comparisonOperator": "GreaterThanOrEqualToThreshold",
+      "dimensions": [
+        {
+          "name": "TargetGroup",
+          "value": "${TARGET_GROUP_FULL_NAME}"
+        },
+        {
+          "name": "LoadBalancer",
+          "value": "${ALB_FULL_NAME}"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "alarmName": "normal-form-app-rds-cpu",
+      "alarmDescription": "High CPU utilization in RDS Aurora",
+      "metricName": "CPUUtilization",
+      "namespace": "AWS/RDS",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 80.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "DBClusterIdentifier",
+          "value": "${RDS_CLUSTER_ID}"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "alarmName": "normal-form-app-rds-connections",
+      "alarmDescription": "High database connections in RDS Aurora",
+      "metricName": "DatabaseConnections",
+      "namespace": "AWS/RDS",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 80.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "DBClusterIdentifier",
+          "value": "${RDS_CLUSTER_ID}"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    },
+    {
+      "alarmName": "normal-form-app-custom-metrics-error-rate",
+      "alarmDescription": "High application error rate",
+      "metricName": "ErrorRate",
+      "namespace": "Normal-Form-App/Application",
+      "statistic": "Average",
+      "period": 300,
+      "evaluationPeriods": 2,
+      "threshold": 5.0,
+      "comparisonOperator": "GreaterThanThreshold",
+      "dimensions": [
+        {
+          "name": "Environment",
+          "value": "production"
+        }
+      ],
+      "alarmActions": [
+        "${SNS_TOPIC_ARN}"
+      ],
+      "treatMissingData": "notBreaching"
+    }
+  ],
+  "dashboards": [
+    {
+      "dashboardName": "Normal-Form-App-Production",
+      "dashboardBody": {
+        "widgets": [
+          {
+            "type": "metric",
+            "properties": {
+              "metrics": [
+                ["AWS/ECS", "CPUUtilization", "ServiceName", "normal-form-app-service", "ClusterName", "normal-form-app-cluster"],
+                [".", "MemoryUtilization", ".", ".", ".", "."]
+              ],
+              "period": 300,
+              "stat": "Average",
+              "region": "${AWS_REGION}",
+              "title": "ECS Resource Utilization",
+              "yAxis": {
+                "left": {
+                  "min": 0,
+                  "max": 100
+                }
+              }
+            }
+          },
+          {
+            "type": "metric",
+            "properties": {
+              "metrics": [
+                ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", "${ALB_FULL_NAME}"],
+                [".", "TargetResponseTime", ".", "."],
+                [".", "HTTPCode_Target_2XX_Count", ".", "."],
+                [".", "HTTPCode_Target_4XX_Count", ".", "."],
+                [".", "HTTPCode_Target_5XX_Count", ".", "."]
+              ],
+              "period": 300,
+              "stat": "Sum",
+              "region": "${AWS_REGION}",
+              "title": "Application Load Balancer Metrics"
+            }
+          },
+          {
+            "type": "metric",
+            "properties": {
+              "metrics": [
+                ["AWS/RDS", "CPUUtilization", "DBClusterIdentifier", "${RDS_CLUSTER_ID}"],
+                [".", "DatabaseConnections", ".", "."],
+                [".", "ReadLatency", ".", "."],
+                [".", "WriteLatency", ".", "."]
+              ],
+              "period": 300,
+              "stat": "Average",
+              "region": "${AWS_REGION}",
+              "title": "RDS Aurora Metrics"
+            }
+          },
+          {
+            "type": "log",
+            "properties": {
+              "query": "SOURCE '/ecs/normal-form-app/backend'\n| fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 100",
+              "region": "${AWS_REGION}",
+              "title": "Recent Errors",
+              "view": "table"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "logGroups": [
+    {
+      "logGroupName": "/ecs/normal-form-app/backend",
+      "retentionInDays": 30,
+      "tags": {
+        "Environment": "production",
+        "Application": "normal-form-app",
+        "Component": "backend"
+      }
+    },
+    {
+      "logGroupName": "/ecs/normal-form-app/frontend",
+      "retentionInDays": 30,
+      "tags": {
+        "Environment": "production",
+        "Application": "normal-form-app",
+        "Component": "frontend"
+      }
+    },
+    {
+      "logGroupName": "/ecs/normal-form-app/cloudwatch-agent",
+      "retentionInDays": 7,
+      "tags": {
+        "Environment": "production",
+        "Application": "normal-form-app",
+        "Component": "monitoring"
+      }
+    },
+    {
+      "logGroupName": "/ecs/normal-form-app/system",
+      "retentionInDays": 7,
+      "tags": {
+        "Environment": "production",
+        "Application": "normal-form-app",
+        "Component": "system"
+      }
+    }
+  ]
+}

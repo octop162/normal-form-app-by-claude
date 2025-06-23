@@ -1,0 +1,375 @@
+{
+  "prometheus": {
+    "config": {
+      "global": {
+        "scrape_interval": "15s",
+        "evaluation_interval": "15s"
+      },
+      "alerting": {
+        "alertmanagers": [
+          {
+            "static_configs": [
+              {
+                "targets": ["alertmanager:9093"]
+              }
+            ]
+          }
+        ]
+      },
+      "rule_files": [
+        "alert_rules.yml"
+      ],
+      "scrape_configs": [
+        {
+          "job_name": "normal-form-app-backend",
+          "static_configs": [
+            {
+              "targets": ["backend:8080"]
+            }
+          ],
+          "metrics_path": "/metrics",
+          "scrape_interval": "30s"
+        },
+        {
+          "job_name": "normal-form-app-frontend",
+          "static_configs": [
+            {
+              "targets": ["frontend:80"]
+            }
+          ],
+          "metrics_path": "/metrics",
+          "scrape_interval": "30s"
+        },
+        {
+          "job_name": "aws-cloudwatch",
+          "ec2_sd_configs": [
+            {
+              "region": "ap-northeast-1",
+              "port": 9100
+            }
+          ],
+          "relabel_configs": [
+            {
+              "source_labels": ["__meta_ec2_tag_Environment"],
+              "target_label": "environment"
+            },
+            {
+              "source_labels": ["__meta_ec2_tag_Application"],
+              "target_label": "application"
+            }
+          ]
+        }
+      ]
+    },
+    "alert_rules": {
+      "groups": [
+        {
+          "name": "normal-form-app.rules",
+          "rules": [
+            {
+              "alert": "HighErrorRate",
+              "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) > 0.05",
+              "for": "5m",
+              "labels": {
+                "severity": "critical"
+              },
+              "annotations": {
+                "summary": "High error rate detected",
+                "description": "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+              }
+            },
+            {
+              "alert": "HighLatency",
+              "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2",
+              "for": "5m",
+              "labels": {
+                "severity": "warning"
+              },
+              "annotations": {
+                "summary": "High latency detected",
+                "description": "95th percentile latency is {{ $value }}s for {{ $labels.job }}"
+              }
+            },
+            {
+              "alert": "DatabaseConnections",
+              "expr": "database_connections_active / database_connections_max > 0.8",
+              "for": "2m",
+              "labels": {
+                "severity": "warning"
+              },
+              "annotations": {
+                "summary": "High database connection usage",
+                "description": "Database connection usage is {{ $value | humanizePercentage }}"
+              }
+            },
+            {
+              "alert": "MemoryUsage",
+              "expr": "process_resident_memory_bytes / 1024 / 1024 > 1024",
+              "for": "5m",
+              "labels": {
+                "severity": "warning"
+              },
+              "annotations": {
+                "summary": "High memory usage",
+                "description": "Memory usage is {{ $value }}MB for {{ $labels.job }}"
+              }
+            },
+            {
+              "alert": "ServiceDown",
+              "expr": "up == 0",
+              "for": "1m",
+              "labels": {
+                "severity": "critical"
+              },
+              "annotations": {
+                "summary": "Service is down",
+                "description": "{{ $labels.job }} service is down"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "grafana": {
+    "dashboards": [
+      {
+        "name": "Normal Form App Overview",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total[5m])",
+                "legendFormat": "{{ method }} {{ status }}"
+              }
+            ]
+          },
+          {
+            "title": "Response Time",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) * 100",
+                "legendFormat": "Error Rate %"
+              }
+            ]
+          },
+          {
+            "title": "Active Users",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "active_sessions_total",
+                "legendFormat": "Active Sessions"
+              }
+            ]
+          },
+          {
+            "title": "Database Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "database_query_duration_seconds",
+                "legendFormat": "Query Duration"
+              },
+              {
+                "expr": "database_connections_active",
+                "legendFormat": "Active Connections"
+              }
+            ]
+          },
+          {
+            "title": "System Resources",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "process_resident_memory_bytes / 1024 / 1024",
+                "legendFormat": "Memory (MB)"
+              },
+              {
+                "expr": "rate(process_cpu_seconds_total[5m]) * 100",
+                "legendFormat": "CPU Usage %"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Infrastructure Metrics",
+        "panels": [
+          {
+            "title": "ECS Service Health",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "aws_ecs_service_running_count",
+                "legendFormat": "Running Tasks"
+              },
+              {
+                "expr": "aws_ecs_service_desired_count",
+                "legendFormat": "Desired Tasks"
+              }
+            ]
+          },
+          {
+            "title": "ALB Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "aws_alb_request_count_sum",
+                "legendFormat": "Request Count"
+              },
+              {
+                "expr": "aws_alb_target_response_time_average",
+                "legendFormat": "Response Time"
+              }
+            ]
+          },
+          {
+            "title": "RDS Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "aws_rds_cpu_utilization_average",
+                "legendFormat": "CPU Utilization"
+              },
+              {
+                "expr": "aws_rds_database_connections_average",
+                "legendFormat": "Database Connections"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "alerts": [
+      {
+        "name": "High Error Rate Alert",
+        "message": "Error rate is above 5% for the last 5 minutes",
+        "frequency": "1m",
+        "conditions": [
+          {
+            "query": {
+              "queryType": "prometheus",
+              "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) > 0.05"
+            },
+            "reducer": {
+              "type": "last",
+              "params": []
+            },
+            "evaluator": {
+              "params": [0.05],
+              "type": "gt"
+            }
+          }
+        ],
+        "notifications": [
+          {
+            "type": "slack",
+            "settings": {
+              "channel": "#alerts",
+              "webhook_url": "${SLACK_WEBHOOK_URL}"
+            }
+          },
+          {
+            "type": "email",
+            "settings": {
+              "addresses": "ops@company.com"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "cloudwatch_agent": {
+    "metrics": {
+      "namespace": "Normal-Form-App/Custom",
+      "metrics_collected": {
+        "cpu": {
+          "measurement": ["cpu_usage_idle", "cpu_usage_iowait", "cpu_usage_user", "cpu_usage_system"],
+          "metrics_collection_interval": 60,
+          "totalcpu": false
+        },
+        "disk": {
+          "measurement": ["used_percent"],
+          "metrics_collection_interval": 60,
+          "resources": ["*"]
+        },
+        "diskio": {
+          "measurement": ["io_time", "read_bytes", "write_bytes", "reads", "writes"],
+          "metrics_collection_interval": 60,
+          "resources": ["*"]
+        },
+        "mem": {
+          "measurement": ["mem_used_percent", "mem_available_percent"],
+          "metrics_collection_interval": 60
+        },
+        "netstat": {
+          "measurement": ["tcp_established", "tcp_time_wait"],
+          "metrics_collection_interval": 60
+        },
+        "processes": {
+          "measurement": ["running", "sleeping", "dead"]
+        }
+      }
+    },
+    "logs": {
+      "logs_collected": {
+        "files": {
+          "collect_list": [
+            {
+              "file_path": "/var/log/application.log",
+              "log_group_name": "/aws/ecs/normal-form-app/application",
+              "log_stream_name": "{instance_id}/application.log",
+              "timestamp_format": "%Y-%m-%d %H:%M:%S"
+            },
+            {
+              "file_path": "/var/log/nginx/access.log",
+              "log_group_name": "/aws/ecs/normal-form-app/nginx",
+              "log_stream_name": "{instance_id}/access.log",
+              "timestamp_format": "[%d/%b/%Y:%H:%M:%S %z]"
+            },
+            {
+              "file_path": "/var/log/nginx/error.log",
+              "log_group_name": "/aws/ecs/normal-form-app/nginx",
+              "log_stream_name": "{instance_id}/error.log",
+              "timestamp_format": "%Y/%m/%d %H:%M:%S"
+            }
+          ]
+        }
+      },
+      "log_stream_name": "normal-form-app-{instance_id}"
+    }
+  },
+  "x_ray": {
+    "tracing_config": {
+      "mode": "Active"
+    },
+    "sampling_rules": [
+      {
+        "description": "Sample all requests for normal-form-app",
+        "service_name": "normal-form-app-*",
+        "http_method": "*",
+        "url_path": "*",
+        "fixed_target": 2,
+        "rate": 0.1
+      }
+    ]
+  }
+}

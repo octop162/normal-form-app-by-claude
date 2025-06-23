@@ -1,5 +1,6 @@
 // API client for backend communication
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import { securityService } from './securityService';
 import type {
   ApiResponse,
   ApiError,
@@ -37,15 +38,33 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // Add request ID for tracking
     config.headers['X-Request-ID'] = `web-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Add CSRF token for non-GET requests
+    if (config.method && !['get', 'head', 'options'].includes(config.method.toLowerCase())) {
+      try {
+        const csrfToken = await securityService.getCSRFToken();
+        config.headers['X-CSRF-Token'] = csrfToken;
+      } catch (error) {
+        console.error('Failed to get CSRF token:', error);
+        // Don't block the request, let the server handle the missing token
+      }
+    }
+    
+    // Add security headers
+    config.headers['X-Requested-With'] = 'XMLHttpRequest';
     
     // Log request in development
     if (import.meta.env.DEV) {
       console.log(`🚀 API Request [${config.method?.toUpperCase()}] ${config.url}`, {
         data: config.data,
-        params: config.params
+        params: config.params,
+        headers: {
+          'X-CSRF-Token': config.headers['X-CSRF-Token'] ? '***' : undefined,
+          'X-Request-ID': config.headers['X-Request-ID']
+        }
       });
     }
     
@@ -67,7 +86,36 @@ apiClient.interceptors.response.use(
     
     return response;
   },
-  (error: AxiosError<ApiResponse>) => {
+  async (error: AxiosError<ApiResponse>) => {
+    // Handle CSRF token errors
+    if (error.response?.status === 403 && 
+        error.response?.data?.error?.code === 'CSRF_TOKEN_INVALID') {
+      console.warn('CSRF token expired, clearing cache');
+      securityService.clearCSRFToken();
+      
+      // Retry the request once with a new token
+      if (error.config && !(error.config as any)._retry) {
+        (error.config as any)._retry = true;
+        
+        try {
+          const newToken = await securityService.getCSRFToken();
+          error.config.headers = error.config.headers || {};
+          error.config.headers['X-CSRF-Token'] = newToken;
+          return apiClient.request(error.config);
+        } catch (retryError) {
+          console.error('Failed to retry request with new CSRF token:', retryError);
+        }
+      }
+    }
+    
+    // Handle rate limiting
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'];
+      if (retryAfter) {
+        console.warn(`Rate limited. Retry after ${retryAfter} seconds`);
+      }
+    }
+    
     // Log error in development
     if (import.meta.env.DEV) {
       console.error(`❌ API Error [${error.response?.status}] ${error.config?.url}`, {
@@ -80,7 +128,7 @@ apiClient.interceptors.response.use(
     const apiError: ApiError = {
       code: error.response?.data?.error?.code || 'NETWORK_ERROR',
       message: error.response?.data?.error?.message || error.message || 'ネットワークエラーが発生しました',
-      details: error.response?.data?.error?.details
+      ...(error.response?.data?.error?.details && { details: error.response.data.error.details })
     };
     
     return Promise.reject(apiError);

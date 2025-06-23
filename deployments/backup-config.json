@@ -1,0 +1,241 @@
+{
+  "aws_backup": {
+    "backup_vault": {
+      "name": "normal-form-app-backup-vault",
+      "kms_key_id": "${BACKUP_KMS_KEY_ID}",
+      "tags": {
+        "Environment": "production",
+        "Application": "normal-form-app",
+        "ManagedBy": "terraform"
+      }
+    },
+    "backup_plans": [
+      {
+        "name": "normal-form-app-daily-backup",
+        "rules": [
+          {
+            "rule_name": "daily_backup_rule",
+            "target_backup_vault": "normal-form-app-backup-vault",
+            "schedule": "cron(0 5 ? * * *)",
+            "start_window": 60,
+            "completion_window": 480,
+            "lifecycle": {
+              "cold_storage_after": 30,
+              "delete_after": 365
+            },
+            "recovery_point_tags": {
+              "BackupType": "Daily",
+              "Environment": "production"
+            },
+            "copy_actions": [
+              {
+                "destination_backup_vault_arn": "${CROSS_REGION_BACKUP_VAULT_ARN}",
+                "lifecycle": {
+                  "cold_storage_after": 30,
+                  "delete_after": 365
+                }
+              }
+            ]
+          }
+        ],
+        "tags": {
+          "Environment": "production",
+          "Application": "normal-form-app"
+        }
+      },
+      {
+        "name": "normal-form-app-weekly-backup",
+        "rules": [
+          {
+            "rule_name": "weekly_backup_rule",
+            "target_backup_vault": "normal-form-app-backup-vault",
+            "schedule": "cron(0 6 ? * SUN *)",
+            "start_window": 60,
+            "completion_window": 480,
+            "lifecycle": {
+              "cold_storage_after": 90,
+              "delete_after": 2555
+            },
+            "recovery_point_tags": {
+              "BackupType": "Weekly",
+              "Environment": "production"
+            }
+          }
+        ]
+      }
+    ],
+    "backup_selections": [
+      {
+        "selection_name": "rds-aurora-selection",
+        "iam_role_arn": "${BACKUP_ROLE_ARN}",
+        "resources": [
+          "arn:aws:rds:${AWS_REGION}:${AWS_ACCOUNT_ID}:cluster:normal-form-app-aurora-cluster"
+        ],
+        "conditions": {
+          "StringEquals": {
+            "aws:ResourceTag/Environment": ["production"],
+            "aws:ResourceTag/Application": ["normal-form-app"]
+          }
+        }
+      },
+      {
+        "selection_name": "ebs-volumes-selection",
+        "iam_role_arn": "${BACKUP_ROLE_ARN}",
+        "resources": [
+          "arn:aws:ec2:${AWS_REGION}:${AWS_ACCOUNT_ID}:volume/*"
+        ],
+        "conditions": {
+          "StringEquals": {
+            "aws:ResourceTag/Environment": ["production"],
+            "aws:ResourceTag/Application": ["normal-form-app"]
+          }
+        }
+      }
+    ]
+  },
+  "rds_snapshots": {
+    "automated_backup_retention": 7,
+    "backup_window": "05:00-06:00",
+    "maintenance_window": "sun:06:00-sun:07:00",
+    "final_snapshot_identifier": "normal-form-app-final-snapshot",
+    "skip_final_snapshot": false,
+    "copy_tags_to_snapshot": true,
+    "deletion_protection": true,
+    "manual_snapshots": {
+      "schedule": "weekly",
+      "retention_days": 90,
+      "naming_convention": "normal-form-app-manual-${timestamp}"
+    }
+  },
+  "s3_backup": {
+    "bucket_name": "normal-form-app-backup-${AWS_ACCOUNT_ID}",
+    "versioning": {
+      "enabled": true
+    },
+    "lifecycle": {
+      "rules": [
+        {
+          "id": "backup-lifecycle",
+          "status": "Enabled",
+          "transitions": [
+            {
+              "days": 30,
+              "storage_class": "STANDARD_IA"
+            },
+            {
+              "days": 90,
+              "storage_class": "GLACIER"
+            },
+            {
+              "days": 365,
+              "storage_class": "DEEP_ARCHIVE"
+            }
+          ],
+          "expiration": {
+            "days": 2555
+          },
+          "noncurrent_version_expiration": {
+            "noncurrent_days": 90
+          }
+        }
+      ]
+    },
+    "replication": {
+      "role": "${S3_REPLICATION_ROLE_ARN}",
+      "rules": [
+        {
+          "id": "cross-region-backup",
+          "status": "Enabled",
+          "prefix": "backups/",
+          "destination": {
+            "bucket": "arn:aws:s3:::normal-form-app-backup-replica-${AWS_ACCOUNT_ID}",
+            "storage_class": "STANDARD_IA"
+          }
+        }
+      ]
+    },
+    "encryption": {
+      "server_side_encryption_configuration": {
+        "rule": {
+          "apply_server_side_encryption_by_default": {
+            "sse_algorithm": "aws:kms",
+            "kms_master_key_id": "${S3_KMS_KEY_ID}"
+          }
+        }
+      }
+    }
+  },
+  "backup_scripts": {
+    "database_backup": {
+      "schedule": "0 4 * * *",
+      "script": "scripts/backup-database.sh",
+      "retention_days": 30,
+      "compression": true,
+      "encryption": true
+    },
+    "application_data_backup": {
+      "schedule": "0 3 * * *",
+      "script": "scripts/backup-app-data.sh",
+      "retention_days": 90,
+      "compression": true,
+      "encryption": true
+    },
+    "log_backup": {
+      "schedule": "0 2 * * *",
+      "script": "scripts/backup-logs.sh",
+      "retention_days": 7,
+      "compression": true
+    }
+  },
+  "disaster_recovery": {
+    "rto_target_minutes": 60,
+    "rpo_target_minutes": 15,
+    "cross_region_backup": {
+      "enabled": true,
+      "regions": ["us-west-2", "eu-west-1"]
+    },
+    "automated_restore_testing": {
+      "enabled": true,
+      "schedule": "monthly",
+      "test_environment": "staging"
+    },
+    "runbook_location": "s3://normal-form-app-runbooks/disaster-recovery/"
+  },
+  "monitoring": {
+    "backup_notifications": {
+      "sns_topic_arn": "${BACKUP_NOTIFICATION_SNS_ARN}",
+      "events": [
+        "BACKUP_JOB_STARTED",
+        "BACKUP_JOB_COMPLETED",
+        "BACKUP_JOB_FAILED",
+        "RESTORE_JOB_STARTED",
+        "RESTORE_JOB_COMPLETED",
+        "RESTORE_JOB_FAILED"
+      ]
+    },
+    "cloudwatch_alarms": [
+      {
+        "alarm_name": "backup-job-failure",
+        "metric_name": "NumberOfBackupJobsFailed",
+        "namespace": "AWS/Backup",
+        "statistic": "Sum",
+        "period": 86400,
+        "evaluation_periods": 1,
+        "threshold": 1,
+        "comparison_operator": "GreaterThanOrEqualToThreshold",
+        "alarm_actions": ["${BACKUP_NOTIFICATION_SNS_ARN}"]
+      },
+      {
+        "alarm_name": "rds-snapshot-failure",
+        "metric_name": "DatabaseConnections",
+        "namespace": "AWS/RDS",
+        "statistic": "Average",
+        "period": 300,
+        "evaluation_periods": 2,
+        "threshold": 0,
+        "comparison_operator": "LessThanThreshold",
+        "alarm_actions": ["${BACKUP_NOTIFICATION_SNS_ARN}"]
+      }
+    ]
+  }
+}

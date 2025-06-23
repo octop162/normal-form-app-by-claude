@@ -1,0 +1,160 @@
+{
+  "name": "normal-form-app-alb",
+  "scheme": "internet-facing",
+  "type": "application",
+  "ipAddressType": "ipv4",
+  "subnets": [
+    "${PUBLIC_SUBNET_1}",
+    "${PUBLIC_SUBNET_2}"
+  ],
+  "securityGroups": [
+    "${ALB_SECURITY_GROUP}"
+  ],
+  "tags": [
+    {
+      "Key": "Environment",
+      "Value": "production"
+    },
+    {
+      "Key": "Application",
+      "Value": "normal-form-app"
+    },
+    {
+      "Key": "ManagedBy",
+      "Value": "terraform"
+    }
+  ],
+  "listeners": [
+    {
+      "protocol": "HTTPS",
+      "port": 443,
+      "certificateArn": "${SSL_CERTIFICATE_ARN}",
+      "defaultActions": [
+        {
+          "type": "forward",
+          "targetGroupArn": "${FRONTEND_TARGET_GROUP_ARN}"
+        }
+      ],
+      "rules": [
+        {
+          "priority": 100,
+          "conditions": [
+            {
+              "field": "path-pattern",
+              "values": ["/api/*"]
+            }
+          ],
+          "actions": [
+            {
+              "type": "forward",
+              "targetGroupArn": "${BACKEND_TARGET_GROUP_ARN}"
+            }
+          ]
+        },
+        {
+          "priority": 200,
+          "conditions": [
+            {
+              "field": "path-pattern",
+              "values": ["/health*"]
+            }
+          ],
+          "actions": [
+            {
+              "type": "forward",
+              "targetGroupArn": "${BACKEND_TARGET_GROUP_ARN}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "protocol": "HTTP",
+      "port": 80,
+      "defaultActions": [
+        {
+          "type": "redirect",
+          "redirectConfig": {
+            "protocol": "HTTPS",
+            "port": "443",
+            "statusCode": "HTTP_301"
+          }
+        }
+      ]
+    }
+  ],
+  "targetGroups": [
+    {
+      "name": "normal-form-app-frontend-tg",
+      "protocol": "HTTP",
+      "port": 80,
+      "vpcId": "${VPC_ID}",
+      "targetType": "ip",
+      "healthCheck": {
+        "enabled": true,
+        "healthyThresholdCount": 2,
+        "unhealthyThresholdCount": 3,
+        "timeoutSeconds": 10,
+        "intervalSeconds": 30,
+        "protocol": "HTTP",
+        "port": "traffic-port",
+        "path": "/",
+        "matcher": "200"
+      },
+      "attributes": [
+        {
+          "key": "deregistration_delay.timeout_seconds",
+          "value": "30"
+        },
+        {
+          "key": "slow_start.duration_seconds",
+          "value": "30"
+        },
+        {
+          "key": "load_balancing.algorithm.type",
+          "value": "round_robin"
+        },
+        {
+          "key": "stickiness.enabled",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "name": "normal-form-app-backend-tg",
+      "protocol": "HTTP",
+      "port": 8080,
+      "vpcId": "${VPC_ID}",
+      "targetType": "ip",
+      "healthCheck": {
+        "enabled": true,
+        "healthyThresholdCount": 2,
+        "unhealthyThresholdCount": 3,
+        "timeoutSeconds": 10,
+        "intervalSeconds": 30,
+        "protocol": "HTTP",
+        "port": "traffic-port",
+        "path": "/health",
+        "matcher": "200"
+      },
+      "attributes": [
+        {
+          "key": "deregistration_delay.timeout_seconds",
+          "value": "30"
+        },
+        {
+          "key": "slow_start.duration_seconds",
+          "value": "30"
+        },
+        {
+          "key": "load_balancing.algorithm.type",
+          "value": "round_robin"
+        },
+        {
+          "key": "stickiness.enabled",
+          "value": "false"
+        }
+      ]
+    }
+  ]
+}

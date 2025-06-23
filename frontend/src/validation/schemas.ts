@@ -1,42 +1,74 @@
-// Validation schemas using Zod
+// Enhanced validation schemas using Zod
 import { z } from 'zod';
+import { securityService } from '../services/securityService';
 
-// Phone number validation regex patterns
+// Enhanced validation patterns
+const JAPANESE_NAME_PATTERN = /^[ひらがなカタカナ漢字ａ-ｚＡ-Ｚ０-９\s\-ー]+$/;
+const KATAKANA_PATTERN = /^[ァ-ヶー\s]+$/;
 const PHONE_PATTERNS = {
   phone1: /^(0\d{1,4})$/, // Area code: 2-5 digits starting with 0
   phone2: /^\d{1,4}$/, // Local exchange: 1-4 digits
   phone3: /^\d{4}$/, // Number: 4 digits
 };
-
-// Postal code validation
 const POSTAL_CODE_PATTERN = /^\d{3}$/;
-
-// Katakana validation
-const KATAKANA_PATTERN = /^[ァ-ヶー]+$/;
-
-// Email validation
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Security validation functions
+const validateNoSuspiciousContent = (value: string): boolean => {
+  if (!value) return true;
+  return !securityService.containsSuspiciousPatterns(value);
+};
+
+const validateJapaneseName = (value: string): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim();
+  return trimmed.length > 0 && JAPANESE_NAME_PATTERN.test(trimmed);
+};
+
+const validateKatakanaOnly = (value: string): boolean => {
+  if (!value) return false;
+  const trimmed = value.trim();
+  return trimmed.length > 0 && KATAKANA_PATTERN.test(trimmed);
+};
+
+const validatePhoneNumberFormat = (phone1: string, phone2: string, phone3: string): boolean => {
+  return securityService.isValidPhoneNumber(phone1, phone2, phone3);
+};
+
+const validatePostalCodeFormat = (code1: string, code2: string): boolean => {
+  return securityService.isValidPostalCode(code1, code2);
+};
+
+const validateEmailFormat = (email: string): boolean => {
+  return securityService.isValidEmail(email);
+};
 
 // Base validation schemas
 export const userFormSchema = z.object({
-  // Personal information
+  // Personal information with enhanced validation
   lastName: z.string()
     .min(1, '姓は必須です')
-    .max(15, '姓は15文字以内で入力してください'),
+    .max(15, '姓は15文字以内で入力してください')
+    .refine(validateJapaneseName, '有効な日本語の名前を入力してください')
+    .refine(validateNoSuspiciousContent, '使用できない文字が含まれています'),
   
   firstName: z.string()
     .min(1, '名は必須です')
-    .max(15, '名は15文字以内で入力してください'),
+    .max(15, '名は15文字以内で入力してください')
+    .refine(validateJapaneseName, '有効な日本語の名前を入力してください')
+    .refine(validateNoSuspiciousContent, '使用できない文字が含まれています'),
   
   lastNameKana: z.string()
     .min(1, '姓カナは必須です')
     .max(15, '姓カナは15文字以内で入力してください')
-    .regex(KATAKANA_PATTERN, '姓カナは全角カタカナで入力してください'),
+    .refine(validateKatakanaOnly, '姓カナは全角カタカナで入力してください')
+    .refine(validateNoSuspiciousContent, '使用できない文字が含まれています'),
   
   firstNameKana: z.string()
     .min(1, '名カナは必須です')
     .max(15, '名カナは15文字以内で入力してください')
-    .regex(KATAKANA_PATTERN, '名カナは全角カタカナで入力してください'),
+    .refine(validateKatakanaOnly, '名カナは全角カタカナで入力してください')
+    .refine(validateNoSuspiciousContent, '使用できない文字が含まれています'),
   
   // Phone number (3 parts)
   phone1: z.string()
@@ -92,14 +124,17 @@ export const userFormSchema = z.object({
     .max(20, '部屋番号は20文字以内で入力してください')
     .optional(),
   
-  // Email
+  // Email with enhanced validation
   email: z.string()
     .min(1, 'メールアドレスは必須です')
     .max(256, 'メールアドレスは256文字以内で入力してください')
-    .regex(EMAIL_PATTERN, 'メールアドレスの形式が正しくありません'),
+    .refine(validateEmailFormat, 'メールアドレスの形式が正しくありません')
+    .refine(validateNoSuspiciousContent, '使用できない文字が含まれています'),
   
   emailConfirm: z.string()
-    .min(1, 'メールアドレス（確認用）は必須です'),
+    .min(1, 'メールアドレス（確認用）は必須です')
+    .refine(validateEmailFormat, 'メールアドレスの形式が正しくありません')
+    .refine(validateNoSuspiciousContent, '使用できない文字が含まれています'),
   
   // Plan and options
   planType: z.string()
@@ -114,25 +149,33 @@ export const userFormSchema = z.object({
   message: 'メールアドレスが一致しません',
   path: ['emailConfirm']
 }).refine((data) => {
-  // Phone number validation for mobile numbers (11 digits total)
-  const fullPhone = data.phone1 + data.phone2 + data.phone3;
-  if (fullPhone.length === 11) {
-    // Check if it starts with mobile prefixes (090, 080, 070, etc.)
-    return /^0[789]0/.test(fullPhone);
-  }
-  // For other lengths, basic format validation is sufficient
-  return true;
+  // Enhanced phone number validation
+  return validatePhoneNumberFormat(data.phone1, data.phone2, data.phone3);
 }, {
-  message: '11桁の電話番号は携帯電話番号の形式で入力してください',
-  path: ['phone1']
+  message: '電話番号の形式が正しくありません。フリーダイヤルは使用できません。',
+  path: ['phone3']
 }).refine((data) => {
-  // Reject toll-free numbers
-  const phone1 = data.phone1;
-  const tollFreePatterns = ['0120', '0800', '0570', '0990'];
-  return !tollFreePatterns.some(pattern => phone1.startsWith(pattern));
+  // Enhanced postal code validation
+  return validatePostalCodeFormat(data.postalCode1, data.postalCode2);
 }, {
-  message: 'フリーダイヤル等の番号は使用できません',
-  path: ['phone1']
+  message: '郵便番号の形式が正しくありません',
+  path: ['postalCode2']
+}).refine((data) => {
+  // Validate options for selected plan
+  if (!data.optionTypes || data.optionTypes.length === 0) {
+    return true; // No options selected is valid
+  }
+  
+  const validOptions = {
+    'A': ['AA', 'AB'],
+    'B': ['BB', 'AB']
+  };
+  
+  const allowedOptions = validOptions[data.planType as keyof typeof validOptions];
+  return allowedOptions && data.optionTypes.every(option => allowedOptions.includes(option));
+}, {
+  message: '選択されたオプションは指定されたプランでは利用できません',
+  path: ['optionTypes']
 });
 
 // Partial validation for real-time validation
